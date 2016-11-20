@@ -4,25 +4,25 @@ var WIDTH = 800;
 var HEIGHT = 600;
 var VERTEX_COUNT = 4;
 
-var BASE_Z = 50;
-var TOP_Z = 10;
+var BASE_Z = 200;
+var TOP_Z = 0;
 
-var CENTER = 250;
-var RADIUS = 150;
+var CENTER = 100;
+var RADIUS = 50;
 
-var DISTANCE = 50;
-var SCALE = 400;
-var OFFSET_X = 600;
-var OFFSET_Y = 540;
+var DISTANCE = -800;
+var SCALE = 1;
+var OFFSET_X = 300;
+var OFFSET_Y = 300;
 
 
-var COORDS_MODE = true;
+var COORDS_MODE = false;
 
-var VX = 250;
-var VY = 250;
-var VZ = 250;
+var VX = 300;
+var VY = 300;
+var VZ = 300;
 
-var FI = 45;
+var FI = 70;
 var OMEGA = 45;
 var RO = 700;
 
@@ -49,7 +49,7 @@ function Prism(center, radius, vertexCount) {
 	
 	function setPoints(polygon, radius, vertexCount, z) {
 		
-		var startAngle = 0;
+		var startAngle = 30;
 		
 		z = z || 0;
 		
@@ -84,6 +84,7 @@ function Prism(center, radius, vertexCount) {
 		}
 		
 		nextPoint = getScreenPoint(this.basePolygon[0]);
+		
 		ctx.moveTo(nextPoint.x, nextPoint.y);
 
 		for (var i = 1; i < vertexCount + 1; i++) {
@@ -102,6 +103,7 @@ function Prism(center, radius, vertexCount) {
 		}
 		
 		ctx.closePath();
+		ctx.stroke();
 	}
 }
 
@@ -116,11 +118,11 @@ function getViewportPoint(worldPoint) {
 	if (COORDS_MODE) {
 		
 		var hyp = Math.sqrt(Math.pow(VX, 2) + Math.pow(VY, 2));
-		a = VX / hyp;
-		b = VY / hyp;
+		c = VX / hyp;
+		d = VY / hyp;
 		ro = Math.sqrt(Math.pow(VZ, 2) + Math.pow(hyp, 2));
-		c = VZ / ro;
-		d = hyp / ro;
+		a = VZ / ro;
+		b = hyp / ro;
 		
 	} else {
 		
@@ -134,16 +136,15 @@ function getViewportPoint(worldPoint) {
 	//var fi = radToDeg(Math.asin(b));
 	//var omega = radToDeg(Math.asin(d));
 
-	
 	var worldMatrix = [worldPoint.x, worldPoint.y, worldPoint.z, 1];
-	var viewportMatrix = [[-d, -a*c, -b*d, 0], [c, -a*d, -b*d, 0], [0, b, -a, 0], [0, 0, ro, 1]];
+	var viewportMatrix = [[-d, -a*c, -b*c, 0], [c, -a*d, -b*d, 0], [0, b, -a, 0], [0, 0, ro, 1]];
 	
 	var resultMatrix = new Array(4);
 	
 	for (var i = 0; i < 4; i++) {
 		resultMatrix[i] = 0;
 		for (var j = 0; j < 4; j++) 
-			resultMatrix[i] += worldMatrix[i] * viewportMatrix[j][i];
+			resultMatrix[i] += worldMatrix[j] * viewportMatrix[j][i];
 	}
 	
 	return new Point(resultMatrix[0], resultMatrix[1], resultMatrix[2]);
@@ -151,28 +152,30 @@ function getViewportPoint(worldPoint) {
 }
 
 function getScreenPoint(worldPoint) {
-	var vpPoint = getViewportPoint(worldPoint);
 	
-	//console.log((DISTANCE * vpPoint.x * SCALE / vpPoint.z) + " " + (DISTANCE * vpPoint.y * SCALE / vpPoint.z));
+	
+	
+	var vpPoint = getViewportPoint(worldPoint);
+	//return new Point(vpPoint.x * SCALE + OFFSET_X, vpPoint.y * SCALE + OFFSET_Y);
+	
 	
 	return new Point(DISTANCE * vpPoint.x * SCALE / vpPoint.z + OFFSET_X, DISTANCE * vpPoint.y * SCALE / vpPoint.z + OFFSET_Y);
 }
 
 
-
 function init() {
 	prism = new Prism(new Point(CENTER, CENTER), RADIUS, VERTEX_COUNT);
 	pointOfObservation = new Point(VX, VY, VZ);
-	
+	clearScreen();
 	draw();
 
-	clearScreen();
+	
+	
 }
 
 function clearScreen() {
 	ctx.fillStyle  = "white";
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
-	ctx.stroke();
 }
 
 
@@ -181,12 +184,23 @@ function draw() {
 	prism.draw();
 }
 
-
+var up = true;
 function update() {
 	//FI = (FI+1) % (radToDeg(Math.PI * 2));
 	//OMEGA = (OMEGA+1) % (radToDeg(Math.PI * 2));
- 	VY--;
-	VX--; 
+ 	/* VY--;
+	VX--;  */
+ 	
+	if (up)
+	{
+		if (FI >= 90)
+			up = false;
+	} else
+		if (FI <= 0)
+			up = true;
+	
+	FI += (up ? 1 : -1);
+	
 }
 
 
@@ -200,7 +214,7 @@ var ctx = canvas.getContext("2d");
 
 init();
 
- setInterval(function() {
+setInterval(function() {
 	update();
 	draw();
-}, 40); 
+}, 40);
