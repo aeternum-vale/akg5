@@ -22,7 +22,7 @@ var VX = 300;
 var VY = 300;
 var VZ = 300;
 
-var FI = 70;
+var FI = 90;
 var OMEGA = 45;
 var RO = 700;
 
@@ -185,21 +185,14 @@ function draw() {
 }
 
 var up = true;
+var step = 0;
+
 function update() {
-	//FI = (FI+1) % (radToDeg(Math.PI * 2));
-	//OMEGA = (OMEGA+1) % (radToDeg(Math.PI * 2));
- 	/* VY--;
-	VX--;  */
- 	
-	if (up)
-	{
-		if (FI >= 90)
-			up = false;
-	} else
-		if (FI <= 0)
-			up = true;
-	
-	FI += (up ? 1 : -1);
+
+	step = (step + 0.01) % radToDeg(Math.PI);
+	var percent = Math.sin(step);
+	FI = percent * radToDeg(Math.PI / 2);
+	console.log(FI + " " + step + " " + percent);
 	
 }
 
