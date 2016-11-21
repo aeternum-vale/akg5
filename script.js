@@ -2,9 +2,7 @@
 
 var WIDTH = 800;
 var HEIGHT = 600;
-var VERTEX_COUNT = 4;
-
-
+var VERTEX_COUNT = 6;
 
 var CENTER = 100;
 var RADIUS = 50;
