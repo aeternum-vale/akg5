@@ -4,13 +4,12 @@ var WIDTH = 800;
 var HEIGHT = 600;
 var VERTEX_COUNT = 4;
 
-var BASE_Z = 200;
-var TOP_Z = 0;
+
 
 var CENTER = 100;
 var RADIUS = 50;
 
-var DISTANCE = 800;
+var DISTANCE = 600;
 var SCALE = 1;
 var OFFSET_X = 300;
 var OFFSET_Y = 300;
@@ -44,7 +43,6 @@ function radToDeg(angle) {
 	return angle * 180 / Math.PI;
 }
 
-
 function Prism(center, radius, vertexCount) {
 	
 	function setPoints(polygon, radius, vertexCount, z) {
@@ -62,7 +60,10 @@ function Prism(center, radius, vertexCount) {
 			polygon[i].z = z;
 		}
 	}
-		
+	
+	var BASE_Z = 200;
+	var TOP_Z = 0;
+	
 	this.vertexCount = vertexCount;
 	this.center = center;
 	this.radius = radius;
@@ -101,26 +102,44 @@ function Prism(center, radius, vertexCount) {
 			return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 		}
 		
+		function getCenterPoint(p1, p2) {
+			return new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
+		}
+		
+		
+		var SM_RATE = 0;
 		
 		if (!COORDS_MODE)
 			pointOfObservation = new Point(RO * Math.sin(degToRad(FI)) * Math.cos(degToRad(OMEGA)),
 				RO * Math.sin(degToRad(FI)) * Math.sin(degToRad(OMEGA)),
-				RO * Math.cos(degToRad(FI)));
+				RO * Math.cos(degToRad(FI))); 
+			else
+			pointOfObservation = new Point(VX, VY, VZ);	
 				
-		var viewVector = getVector(pointOfObservation, new Point(0, 0, 0));
+		
 		
 		for (var i = 0; i < vertexCount; i++) {
 			var normalVector = getNormalVector(this.basePolygon[i],
 				this.basePolygon[(i + 1) % this.vertexCount], this.topPolygon[i]);
 				
-			if (getScalarMultiplication(normalVector, viewVector) < 1)
+				
+			var facetCenter = getCenterPoint(this.basePolygon[(i + 1) % this.vertexCount], this.topPolygon[i]);
+				
+			var viewVector = getVector(pointOfObservation, facetCenter);
+				
+			if (getScalarMultiplication(normalVector, viewVector) < SM_RATE)
 				this.frontSideFacets[i] = true;
 			else
 				this.frontSideFacets[i] = false;
 		}
 		
 		normalVector = getNormalVector(this.basePolygon[0], this.basePolygon[1], this.basePolygon[2]);
-		if (getScalarMultiplication(normalVector, viewVector) < 1)
+		facetCenter = center;
+		facetCenter.z = BASE_Z;
+		viewVector = getVector(pointOfObservation, facetCenter);
+		var viewVector = getVector(pointOfObservation, facetCenter);
+		
+		if (getScalarMultiplication(normalVector, viewVector) < SM_RATE)
 				this.frontBaseFacets[0] = true;
 			else
 				this.frontBaseFacets[0] = false;
@@ -128,12 +147,18 @@ function Prism(center, radius, vertexCount) {
 			
 		normalVector = getNormalVector(this.topPolygon[0], this.topPolygon[1], this.topPolygon[2]);
 		normalVector.z *= -1;
-		if (getScalarMultiplication(normalVector, viewVector) < 1)
+		
+		facetCenter = center;
+		facetCenter.z = TOP_Z;
+		viewVector = getVector(pointOfObservation, facetCenter);
+		var viewVector = getVector(pointOfObservation, facetCenter);
+		
+		
+		if (getScalarMultiplication(normalVector, viewVector) < SM_RATE)
 				this.frontBaseFacets[1] = true;
 			else
 				this.frontBaseFacets[1] = false;
-		//console.log(this.frontSideFacets);
-		
+
 	}
 	
 	
@@ -247,8 +272,7 @@ function getScreenPoint(worldPoint) {
 function init() {
 	prism = new Prism(new Point(CENTER, CENTER), RADIUS, VERTEX_COUNT);
 	
-	if (COORDS_MODE)
-		pointOfObservation = new Point(VX, VY, VZ);
+	
 	
 	draw();
 }
